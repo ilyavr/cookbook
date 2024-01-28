@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>All Products</title>
+    <style>
+        ul {
+            font-size: 25px;
+        }
+
+        li {
+            margin-bottom: 10px;
+        }
+
+        #all-recipes {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>All Products</h1>
+
+<ul>
+    {% for product in products %}
+        <li>
+            <a href="{% url 'show_recipes_without_product_redirect' product.id %}">{{ product.name }}</a>
+            <span id="dishes-cooked-{{ product.id }}">{{ product.times_used }} dishes cooked</span>
+        </li>
+    {% endfor %}
+</ul>
+
+<div id="all-recipes">
+    <h2>All Recipes</h2>
+    <ul>
+        {% for recipe in unique_recipes %}
+            <li>
+                {{ recipe.name }}
+                <button onclick="cookRecipe('{{ recipe.id }}', 'all')">Cook Recipe</button>
+                <form onsubmit="addProductToRecipe('{{ recipe.id }}'); return false;" method="get">
+                    <select id="product-select-{{ recipe.id }}">
+                        {% for product in products %}
+                            <option value="{{ product.id }}">{{ product.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <input type="number" id="product-weight-{{ recipe.id }}" placeholder="Enter weight">
+                    <button type="submit">Add Product</button>
+                </form>
+            </li>
+        {% endfor %}
+    </ul>
+</div>
+
+<script>
+    function addProductToRecipe(recipeId) {
+        var productSelect = document.getElementById('product-select-' + recipeId);
+        var productWeight = document.getElementById('product-weight-' + recipeId);
+
+        var productId = productSelect.value;
+        var weight = productWeight.value;
+        fetch(`/cookbookapp/add_product_to_recipe/?recipe_id=${recipeId}&product_id=${productId}&weight=${weight}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    updateAllProducts();
+                }
+            })
+            .catch(error => console.error('Error:', error));
+    }
+</script>
+
+
+
+<script>
+    function cookRecipe(recipeId, productId) {
+        fetch(`/cookbookapp/cook_recipe/?recipe_id=${recipeId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    if (productId !== 'all') {
+                        var dishesCookedElement = document.getElementById('dishes-cooked-' + productId);
+                        
+                        if (dishesCookedElement) {
+                            dishesCookedElement.textContent = data.times_used + ' dishes cooked';
+                        }
+                    }
+                    updateAllProducts();
+                }
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    function updateAllProducts() {
+        fetch('/cookbookapp/get_all_products_info/')
+            .then(response => response.json())
+            .then(data => {
+                for (const productInfo of data.products_info) {
+                    var dishesCookedElement = document.getElementById('dishes-cooked-' + productInfo.product_id);
+                    
+                    if (dishesCookedElement) {
+                        dishesCookedElement.textContent = productInfo.times_used + ' dishes cooked';
+                    }
+                }
+            })
+            .catch(error => console.error('Error:', error));
+    }
+</script>
+
+
+</body>
+</html>

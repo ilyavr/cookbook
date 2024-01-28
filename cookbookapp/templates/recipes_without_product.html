@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Recipes Without Product</title>
+    <style>
+        table {
+            font-size: 25px; 
+        }
+
+        th, td {
+            padding: 10px; 
+        }
+    </style>
+</head>
+<body>
+
+<h1>Recipes Without {{ product.name }}</h1>
+<table border="1">
+    <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Weight (g)</th>
+    </tr>
+    {% for recipe in recipes %}
+        <tr>
+            <td>{{ recipe.id }}</td>
+            <td>{{ recipe.name }}</td>
+            <td>
+                {% for recipe_product in recipe.recipeproduct_set.all %}
+                    {% if recipe_product.product.id == product.id %}
+                        {{ recipe_product.weight }}
+                    {% endif %}
+                {% endfor %}
+            </td>
+        </tr>
+    {% endfor %}
+</table>
+
+
+
+</body>
+</html>
